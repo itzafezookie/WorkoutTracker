@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PF Workout Tracker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#57b846">
+  <link rel="icon" href="icon-192.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg: #2c2d32;
+      --nav-bg: #656773;
+      --header-bg: #57b846;
+      --accent: #4b9e3d;
+      --text: white;
+      --strike: #bbb;
+      --card-bg: #3a3b41;
+      --input-bg: #4a4b52;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    body.light {
+      --bg: #f4f4f4;
+      --nav-bg: #dcdde1;
+      --header-bg: #4b9e3d;
+      --accent: #57b846;
+      --text: #222;
+      --strike: #999;
+      --card-bg: #ffffff;
+      --input-bg: #f0f0f0;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -100% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(
+        90deg,
+        var(--bg) 0%,
+        var(--bg) 40%,
+        rgba(255, 255, 255, 0.03) 50%,
+        var(--bg) 60%,
+        var(--bg) 100%
+      );
+      background-size: 200% 100%;
+      background-attachment: fixed;
+      min-height: 100vh;
+      animation: shimmer 15s infinite linear;
+      margin: 0;
+      padding: 0;
+      color: var(--text);
+      line-height: 1.6;
+      transition: var(--transition);
+    }
+    
+    header {
+      background: var(--header-bg);
+      color: var(--text);
+      padding: 0.8rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+    
+    header h1 {
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    
+    .settings-icon {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 1.2rem;
+      opacity: 0.7;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .settings-icon:hover {
+      opacity: 1;
+      transform: rotate(45deg);
+    }
+    
+    .wake-lock-indicator {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 1.2rem;
+      opacity: 0.7;
+    }
+    
+    .wake-lock-active {
+      color: #ffcc00;
+    }
+    
+    nav {
+      display: flex;
+      justify-content: space-around;
+      background: var(--nav-bg);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    nav button {
+      flex: 1;
+      padding: 0.75rem 0.5rem;
+      border: none;
+      background: var(--nav-bg);
+      font-size: 0.95rem;
+      color: var(--text);
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+    }
+    
+    nav button:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    nav button.active {
+      background: var(--accent);
+      color: var(--text);
+      border-bottom: 3px solid #fff;
+    }
+    
+    .tab {
+      display: none;
+      padding: 0.5rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .tab.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .tab h2 {
+      color: var(--text);
+    }
+    
+    .exercise {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      background: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+    
+    .exercise:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .exercise label {
+      flex: 1;
+      margin-left: 0.5rem;
+      color: var(--text);
+      font-weight: 500;
+    }
+    
+    .exercise input[type="number"] {
+      width: 30px;
+      margin-left: 0.5rem;
+      padding: 4px;
+      border: none;
+      border-radius: 4px;
+      background: var(--input-bg);
+      color: var(--text);
+      text-align: center;
+    }
+    
+    .exercise input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    
+    .exercise input[type="checkbox"]:checked + label {
+      color: var(--strike);
+      text-decoration: line-through;
+      font-style: italic;
+    }
+    
+    .button-group {
+      display: flex;
+      justify-content: space-around;
+      gap: 0.75rem;
+      margin: 1.5rem 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .reset-button {
+      flex: 1;
+      padding: 0.85rem;
+      background: var(--accent);
+      color: var(--text);
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+      font-weight: 500;
+      min-width: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .reset-button i {
+      margin-right: 8px;
+    }
+    
+    .reset-button:hover {
+      background: var(--header-bg);
+      transform: translateY(-2px);
+    }
+    
+    .reset-button:active {
+      transform: translateY(1px);
+    }
+    
+    .flash {
+      animation: flash-bg 0.8s ease-in-out;
+    }
+    
+    @keyframes flash-bg {
+      0% { background-color: var(--header-bg); }
+      100% { background-color: transparent; }
+    }
+    
+    #rest-timer {
+      text-align: center;
+      margin: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      padding: 0.5rem;
+      border-radius: 8px;
+      transition: var(--transition);
+    }
+    
+    .timer-active {
+      background: var(--card-bg);
+      box-shadow: var(--shadow);
+    }
+    
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 200;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      overflow: auto;
+    }
+    
+    .modal-content {
+      background: var(--card-bg);
+      margin: 15% auto;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      width: 80%;
+      max-width: 500px;
+      animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .close-modal {
+      color: var(--text);
+      float: right;
+      font-size: 1.5rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close-modal:hover {
+      color: var(--accent);
+    }
+    
+    .settings-section {
+      margin-bottom: 1.5rem;
+    }
+    
+    .settings-section h3 {
+      margin-bottom: 0.5rem;
+      color: var(--text);
+      border-bottom: 1px solid var(--accent);
+      padding-bottom: 0.3rem;
+    }
+    
+    .setting-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    
+    .setting-item label {
+      flex: 1;
+      margin-right: 1rem;
+    }
+    
+    .setting-item input[type="number"] {
+      width: 60px;
+      padding: 0.5rem;
+      border: none;
+      border-radius: 4px;
+      background: var(--input-bg);
+      color: var(--text);
+      text-align: center;
+    }
+    
+    .setting-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .settings-button {
+      flex: 1;
+      padding: 0.75rem;
+      background: var(--accent);
+      color: var(--text);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+    }
+    
+    .settings-button i {
+      margin-right: 8px;
+    }
+    
+    .settings-button:hover {
+      background: var(--header-bg);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div id="settings-icon" class="settings-icon" title="Settings">
+      <i class="fas fa-cog"></i>
+    </div>
+    <h1><i class="fas fa-dumbbell"></i> PF Workout Tracker</h1>
+    <div id="wake-lock-indicator" class="wake-lock-indicator" title="Screen Wake Lock">
+      <i class="fas fa-moon"></i>
+    </div>
+  </header>
+  
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Settings</h2>
+      
+      <div class="settings-section">
+        <h3>Rest Timer</h3>
+        <div class="setting-item">
+          <label for="rest-seconds">Rest Duration (seconds):</label>
+          <input type="number" id="rest-seconds" min="5" max="300" value="60">
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <h3>Data Management</h3>
+        <div class="setting-buttons">
+          <button id="export-data" class="settings-button"><i class="fas fa-download"></i> Export Data</button>
+          <button id="import-data" class="settings-button"><i class="fas fa-upload"></i> Import Data</button>
+          <input type="file" id="import-file" accept=".json" style="display: none;">
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <nav>
+    <button class="tab-btn active" data-tab="push"><i class="fas fa-arrow-up"></i> Push</button>
+    <button class="tab-btn" data-tab="pull"><i class="fas fa-arrow-down"></i> Pull</button>
+    <button class="tab-btn" data-tab="legs"><i class="fas fa-walking"></i> Legs</button>
+    <button class="tab-btn" data-tab="full"><i class="fas fa-user"></i> Full Body</button>
+  </nav>
+
+  <div id="push" class="tab active">
+    <div class="exercise"><input type="checkbox" /><label>Hammer Chest Press</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Hammer Incline Press</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Hammer Shoulder Press</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Lateral Raise (Deltoid)</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Pec Fly</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Assisted Dips</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="assist" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Cable Tricep Pushdowns</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+  </div>
+
+  <div id="pull" class="tab">
+    <div class="exercise"><input type="checkbox" /><label>Hammer Front Pulldown</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Hammer Row</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Rear Delt (Pec-Fly)</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Back Extension</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Cable Bicep Curls</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Assisted Pull Ups</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="assist" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Cable Face Pulls</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+  </div>
+  <div id="legs" class="tab">
+    <div class="exercise"><input type="checkbox" /><label>Leg Press</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Leg Extension</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Leg Curl</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Calf Extension</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Hip Abduction</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Hip Adduction</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="assist" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Glute Kickbacks</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+  </div>
+
+  <div id="full" class="tab">
+    <div class="exercise"><input type="checkbox" /><label>Hammer Chest Press</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Hammer Row</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Hammer Shoulder Press</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Leg Press</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Back Extension</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Assisted Pull-Ups</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="assist" /></div>
+    <div class="exercise"><input type="checkbox" /><label>Tricep Pushdowns</label><input type="number" placeholder="sets" /><input type="number" placeholder="reps" /><input type="number" placeholder="lbs" /></div>
+  </div>
+
+  <div class="button-group">
+    <button class="reset-button" onclick="resetCheckboxes()"><i class="fas fa-redo-alt"></i> Reset Checkboxes</button>
+    <button id="rest-button" class="reset-button" onclick="toggleRestTimer()"><i class="fas fa-stopwatch"></i> Start Rest</button>
+    <button id="wake-lock-button" class="reset-button" onclick="toggleWakeLock()"><i class="fas fa-moon"></i> Screen Lock: OFF</button>
+  </div>
+
+  <div id="rest-timer"></div>
+  <audio id="beep" preload="auto">
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg" />
+  </audio>
+
+  <script>
+    // Register service worker for PWA installation
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(registration => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          })
+          .catch(error => {
+            console.log('ServiceWorker registration failed: ', error);
+          });
+      });
+    }
+    
+    // Add install prompt
+    let deferredPrompt;
+    const installBanner = document.createElement('div');
+    installBanner.style.display = 'none';
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      deferredPrompt = e;
+      
+      // Show the install banner at the bottom of the screen
+      installBanner.style.display = 'flex';
+      installBanner.style.position = 'fixed';
+      installBanner.style.bottom = '0';
+      installBanner.style.left = '0';
+      installBanner.style.right = '0';
+      installBanner.style.padding = '1rem';
+      installBanner.style.backgroundColor = 'var(--header-bg)';
+      installBanner.style.color = 'var(--text)';
+      installBanner.style.justifyContent = 'space-between';
+      installBanner.style.alignItems = 'center';
+      installBanner.style.zIndex = '1000';
+      installBanner.style.boxShadow = 'var(--shadow)';
+      
+      installBanner.innerHTML = `
+        <div>Install this app on your device for easy access</div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button id="install-button" style="padding: 0.5rem 1rem; background: var(--accent); color: var(--text); border: none; border-radius: 4px; cursor: pointer;">Install</button>
+          <button id="close-install-banner" style="padding: 0.5rem 1rem; background: transparent; color: var(--text); border: 1px solid var(--text); border-radius: 4px; cursor: pointer;">Not now</button>
+        </div>
+      `;
+      
+      document.body.appendChild(installBanner);
+      
+      document.getElementById('install-button').addEventListener('click', (e) => {
+        // Hide the banner
+        installBanner.style.display = 'none';
+        // Show the prompt
+        deferredPrompt.prompt();
+        // Wait for the user to respond to the prompt
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+          } else {
+            console.log('User dismissed the install prompt');
+          }
+          deferredPrompt = null;
+        });
+      });
+      
+      document.getElementById('close-install-banner').addEventListener('click', (e) => {
+        installBanner.style.display = 'none';
+      });
+    });
+    
+    // Wake Lock API implementation
+    let wakeLock = null;
+    const wakeLockIndicator = document.getElementById('wake-lock-indicator');
+    const wakeLockButton = document.getElementById('wake-lock-button');
+    
+    // Function to request a wake lock
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLockIndicator.innerHTML = '<i class="fas fa-sun wake-lock-active"></i>';
+          wakeLockIndicator.title = 'Screen Wake Lock Active';
+          wakeLockButton.innerHTML = '<i class="fas fa-sun wake-lock-active"></i> Screen Lock: ON';
+          
+          wakeLock.addEventListener('release', () => {
+            wakeLockIndicator.innerHTML = '<i class="fas fa-moon"></i>';
+            wakeLockIndicator.title = 'Screen Wake Lock Inactive';
+            wakeLockButton.innerHTML = '<i class="fas fa-moon"></i> Screen Lock: OFF';
+            wakeLock = null;
+          });
+          
+          return true;
+        } else {
+          console.warn('Wake Lock API not supported');
+          return false;
+        }
+      } catch (err) {
+        console.error(`Wake Lock error: ${err.name}, ${err.message}`);
+        return false;
+      }
+    }
+    
+    // Function to release wake lock
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+      }
+    }
+    
+    // Toggle wake lock on/off
+    async function toggleWakeLock() {
+      if (wakeLock) {
+        releaseWakeLock();
+      } else {
+        const success = await requestWakeLock();
+        if (success) {
+          // Show success notification
+          const display = document.getElementById('rest-timer');
+          display.textContent = 'Screen will stay awake!';
+          display.classList.add('timer-active');
+          setTimeout(() => {
+            display.textContent = '';
+            display.classList.remove('timer-active');
+          }, 2000);
+        } else {
+          // Show error notification
+          const display = document.getElementById('rest-timer');
+          display.textContent = 'Wake Lock not supported on this device';
+          display.classList.add('timer-active');
+          setTimeout(() => {
+            display.textContent = '';
+            display.classList.remove('timer-active');
+          }, 3000);
+        }
+      }
+    }
+    
+    // Handle visibility change to reacquire wake lock if needed
+    document.addEventListener('visibilitychange', async () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        await requestWakeLock();
+      }
+    });
+
+    // Save input values to localStorage
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    numberInputs.forEach((input, index) => {
+      const key = `exercise_input_${index}`;
+      input.value = localStorage.getItem(key) || '';
+      input.addEventListener('input', () => {
+        localStorage.setItem(key, input.value);
+      });
+    });
+
+    // Save checkbox states to localStorage
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach((checkbox, index) => {
+      const key = `exercise_checkbox_${index}`;
+      checkbox.checked = localStorage.getItem(key) === 'true';
+      checkbox.addEventListener('change', () => {
+        localStorage.setItem(key, checkbox.checked);
+      });
+    });
+
+    function resetCheckboxes() {
+      document.querySelectorAll('input[type="checkbox"]').forEach((cb, index) => {
+        cb.checked = false;
+        localStorage.setItem(`exercise_checkbox_${index}`, false);
+      });
+    }
+
+    // Theme detection and application
+    function applyTheme() {
+      // Check if the browser supports prefers-color-scheme
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.body.classList.add('light');
+      } else {
+        // Default to dark mode
+        document.body.classList.remove('light');
+      }
+    }
+    
+    // Apply theme on page load
+    applyTheme();
+    
+    // Listen for system theme changes
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
+        if (e.matches) {
+          document.body.classList.add('light');
+        } else {
+          document.body.classList.remove('light');
+        }
+      });
+    }
+
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    const tabs = document.querySelectorAll(".tab");
+
+    // Save and restore active tab
+    tabButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        tabButtons.forEach(b => b.classList.remove("active"));
+        tabs.forEach(t => t.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.add("active");
+        localStorage.setItem('active-tab', btn.dataset.tab);
+      });
+    });
+    
+    // Load saved active tab
+    const savedTab = localStorage.getItem('active-tab');
+    if (savedTab) {
+      tabButtons.forEach(b => b.classList.remove("active"));
+      tabs.forEach(t => t.classList.remove("active"));
+      document.querySelector(`[data-tab="${savedTab}"]`).classList.add("active");
+      document.getElementById(savedTab).classList.add("active");
+    }
+
+    // Settings modal functionality
+    const settingsIcon = document.getElementById('settings-icon');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeModal = document.querySelector('.close-modal');
+    const restSecondsInput = document.getElementById('rest-seconds');
+    const exportDataBtn = document.getElementById('export-data');
+    const importDataBtn = document.getElementById('import-data');
+    const importFileInput = document.getElementById('import-file');
+    
+    // Open settings modal
+    settingsIcon.addEventListener('click', () => {
+      settingsModal.style.display = 'block';
+      // Load current rest timer value
+      restSecondsInput.value = localStorage.getItem('rest-seconds') || 60;
+    });
+    
+    // Close settings modal
+    closeModal.addEventListener('click', () => {
+      settingsModal.style.display = 'none';
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+      if (e.target === settingsModal) {
+        settingsModal.style.display = 'none';
+      }
+    });
+    
+    // Save rest timer duration
+    restSecondsInput.addEventListener('change', () => {
+      const value = parseInt(restSecondsInput.value);
+      if (value >= 5 && value <= 300) {
+        localStorage.setItem('rest-seconds', value);
+      }
+    });
+    
+    // Export workout data
+    exportDataBtn.addEventListener('click', () => {
+      const workoutData = {
+        inputs: {},
+        checkboxes: {}
+      };
+      
+      // Collect all input values
+      numberInputs.forEach((input, index) => {
+        workoutData.inputs[`exercise_input_${index}`] = input.value;
+      });
+      
+      // Collect all checkbox states
+      checkboxes.forEach((checkbox, index) => {
+        workoutData.checkboxes[`exercise_checkbox_${index}`] = checkbox.checked;
+      });
+      
+      // Create and download JSON file
+      const dataStr = JSON.stringify(workoutData, null, 2);
+      const dataBlob = new Blob([dataStr], {type: 'application/json'});
+      const url = URL.createObjectURL(dataBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'workout-data.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      // Show success notification
+      const display = document.getElementById('rest-timer');
+      display.textContent = 'Workout data exported!';
+      display.classList.add('timer-active');
+      setTimeout(() => {
+        display.textContent = '';
+        display.classList.remove('timer-active');
+      }, 2000);
+    });
+    
+    // Trigger file input when import button is clicked
+    importDataBtn.addEventListener('click', () => {
+      importFileInput.click();
+    });
+    
+    // Import workout data
+    importFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          
+          // Apply input values
+          if (data.inputs) {
+            Object.entries(data.inputs).forEach(([key, value]) => {
+              localStorage.setItem(key, value);
+              const index = key.replace('exercise_input_', '');
+              if (numberInputs[index]) {
+                numberInputs[index].value = value;
+              }
+            });
+          }
+          
+          // Apply checkbox states
+          if (data.checkboxes) {
+            Object.entries(data.checkboxes).forEach(([key, value]) => {
+              localStorage.setItem(key, value);
+              const index = key.replace('exercise_checkbox_', '');
+              if (checkboxes[index]) {
+                checkboxes[index].checked = value === true || value === 'true';
+              }
+            });
+          }
+          
+          // Show success notification
+          const display = document.getElementById('rest-timer');
+          display.textContent = 'Workout data imported!';
+          display.classList.add('timer-active');
+          setTimeout(() => {
+            display.textContent = '';
+            display.classList.remove('timer-active');
+          }, 2000);
+          
+        } catch (err) {
+          console.error('Error importing data:', err);
+          
+          // Show error notification
+          const display = document.getElementById('rest-timer');
+          display.textContent = 'Error importing data!';
+          display.classList.add('timer-active');
+          setTimeout(() => {
+            display.textContent = '';
+            display.classList.remove('timer-active');
+          }, 2000);
+        }
+      };
+      
+      reader.readAsText(file);
+      // Reset file input
+      e.target.value = '';
+    });
+
+    let restInterval;
+    let isRestTimerActive = false;
+    
+    function toggleRestTimer() {
+      const restButton = document.getElementById('rest-button');
+      const display = document.getElementById('rest-timer');
+      
+      if (isRestTimerActive) {
+        // Stop and reset the timer
+        clearInterval(restInterval);
+        isRestTimerActive = false;
+        restButton.innerHTML = '<i class="fas fa-stopwatch"></i> Start Rest';
+        display.textContent = '';
+        display.classList.remove('timer-active');
+      } else {
+        // Start the timer
+        startRestTimer();
+        restButton.innerHTML = '<i class="fas fa-stop"></i> Stop and Reset';
+      }
+    }
+    
+    function startRestTimer() {
+      clearInterval(restInterval);
+      isRestTimerActive = true;
+      
+      // Get rest duration from settings or default to 60
+      let timeLeft = parseInt(localStorage.getItem('rest-seconds')) || 60;
+      const display = document.getElementById('rest-timer');
+      display.textContent = `Rest: ${timeLeft}s`;
+      display.classList.add('timer-active');
+
+      // Request wake lock when timer starts
+      if (!wakeLock) {
+        requestWakeLock();
+      }
+
+      restInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          clearInterval(restInterval);
+          isRestTimerActive = false;
+          document.getElementById('rest-button').innerHTML = '<i class="fas fa-stopwatch"></i> Start Rest';
+          display.textContent = 'Rest over!';
+          document.body.classList.add('flash');
+          setTimeout(() => document.body.classList.remove('flash'), 800);
+          
+          // Vibrate if supported
+          if ('vibrate' in navigator) {
+            navigator.vibrate([200, 100, 200]);
+          }
+
+          // Play beep 3 times using cloned audio elements
+          let count = 0;
+          const playBeep = () => {
+            const beepClone = document.getElementById('beep').cloneNode(true);
+            beepClone.play().catch(e => console.warn("Audio blocked by browser", e));
+          };
+          playBeep(); // first beep immediately
+          const beepInterval = setInterval(() => {
+            count++;
+            if (count >= 3) {
+              clearInterval(beepInterval);
+              
+              // Remove timer-active class after beeps finish
+              setTimeout(() => {
+                display.classList.remove('timer-active');
+              }, 3000);
+            } else {
+              playBeep();
+            }
+          }, 500);
+        } else {
+          display.textContent = `Rest: ${timeLeft}s`;
+        }
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

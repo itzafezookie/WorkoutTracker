@@ -1,6 +1,6 @@
 const CACHE_NAME = 'workout-tracker-v1';
 const urlsToCache = [
-  './Workout Tracker.html',
+  './index.html',
   './manifest.json',
   './icon-192.svg',
   './icon-512.svg',

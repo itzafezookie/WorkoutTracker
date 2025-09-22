@@ -19,7 +19,7 @@
       --card-bg: #3a3b41;
       --input-bg: #4a4b52;
       --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      --transition: all 0.3s ease;
+      --transition: all 0.2s ease;
     }
 
     body.light {
@@ -43,26 +43,17 @@
       }
     }
     
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(
-        90deg,
-        var(--bg) 0%,
-        var(--bg) 40%,
-        rgba(255, 255, 255, 0.001) 50%,
-        var(--bg) 60%,
-        var(--bg) 100%
-      );
-      background-size: 200% 100%;
-      background-attachment: fixed;
-      min-height: 100vh;
-      animation: shimmer 15s infinite linear;
-      margin: 0;
-      padding: 0;
-      color: var(--text);
-      line-height: 1.6;
-      transition: var(--transition);
-    }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  /* Static angular gradient */
+  background: linear-gradient(105deg, #aeaeae, #595a5d); /* pick your colors */
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  color: var(--text);
+  line-height: 1.6;
+  transition: var(--transition);
+}
     
     header {
       background: var(--header-bg);

@@ -2,7 +2,7 @@
   "name": "PF Workout Tracker",
   "short_name": "Workout",
   "description": "Track your Planet Fitness workouts",
-  "start_url": "./Workout Tracker.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#2c2d32",
   "theme_color": "#57b846",
